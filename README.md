@@ -518,3 +518,6 @@ Now let’s copy and plug in the public IP of our web tier instance to see our w
 
 
 -Now check private instance and database over there entry created or not
+
+![image](https://github.com/asdweb22/Aws-three-tier-architecture/assets/62742174/a7b22033-255c-4664-8eae-520a1f83fe8f)
+
