@@ -95,3 +95,122 @@ Associate private subnet Az-1b
 
     -E) Database Security group
     ![image](https://github.com/asdweb22/Aws-three-tier-architecture/assets/62742174/e4fa72d3-6679-4983-a143-633ba2a4a7a0)
+
+**Part 2: Database Deployment**
+     This section of the workshop will walk us through deploying the database layer of the three-tier architecture.
+
+     Objectives:
+      Deploy Database Layer
+      Subnet Groups
+      Multi-AZ Database
+
+      A) creating subnet group in rds Section
+      ![image](https://github.com/asdweb22/Aws-three-tier-architecture/assets/62742174/8944cf8d-7f48-40a4-be23-77b0419c84ab)
+      ![image](https://github.com/asdweb22/Aws-three-tier-architecture/assets/62742174/3e23f5c7-51e6-450a-ab67-a5164889829b)
+      ![image](https://github.com/asdweb22/Aws-three-tier-architecture/assets/62742174/bb0945e5-28bd-44a6-89c2-c6122982ad09)
+
+
+      B) Create Database: 
+      ![image](https://github.com/asdweb22/Aws-three-tier-architecture/assets/62742174/6f46fdf3-5e5c-42d1-8b7e-8c2d5eca7c14)
+      ![image](https://github.com/asdweb22/Aws-three-tier-architecture/assets/62742174/87e3909a-656d-4718-8cac-9cab9fa90af4)
+      ![image](https://github.com/asdweb22/Aws-three-tier-architecture/assets/62742174/21896f95-fb09-49e1-ade3-a4b677f109eb)
+      ![image](https://github.com/asdweb22/Aws-three-tier-architecture/assets/62742174/b083731d-4c3a-4955-ae6e-f34ed3a50e18)
+      ![image](https://github.com/asdweb22/Aws-three-tier-architecture/assets/62742174/680500ca-f5cd-4469-9fd6-62926409eeeb)
+      ![image](https://github.com/asdweb22/Aws-three-tier-architecture/assets/62742174/4700b34a-cdc7-49a2-8c48-07552fe67d81)
+      ![image](https://github.com/asdweb22/Aws-three-tier-architecture/assets/62742174/092f30a1-f5cd-4dcc-b3cc-b10094db18b2)
+      ![image](https://github.com/asdweb22/Aws-three-tier-architecture/assets/62742174/8ea41f25-bcce-49a0-980f-3628e997d7a6)
+      ![image](https://github.com/asdweb22/Aws-three-tier-architecture/assets/62742174/9e561139-c61b-4624-bed0-bc6284c95c30)
+
+**Part 3: App Tier Instance Deployment**
+
+In this section, we are going to create an EC2 instance for our app layer and make all the essential software configurations so that the app can run correctly. The app layer will consist of a Node.js application running on port 4000. In addition, we will configure our database with some data and tables.
+
+**Objectives:**
+Create App Tier Instance
+Configure Software Stack
+Configure Database Schema
+Test DB connectivity
+
+
+**App Instance Deployment** 
+Let’s name our app instance ‘app-web-tier’ for the three-tier architecture and select the Amazon Linux 2 AMI for our application and operating system image.
+
+![image](https://github.com/asdweb22/Aws-three-tier-architecture/assets/62742174/46c7c96f-e74b-4e36-9301-808d194293c0)
+
+We’ll be using the free tier eligible T.2 micro instance type so let’s select that to proceed.
+
+![image](https://github.com/asdweb22/Aws-three-tier-architecture/assets/62742174/9562f3b2-9e2a-4f12-8b83-5895a05d3817)
+
+
+Even though ‘Proceed without a key is (Not recommended)’, we’ll proceed without a key pair for architecture.
+![image](https://github.com/asdweb22/Aws-three-tier-architecture/assets/62742174/8e3bbe43-280f-4e6c-aa21-050e89763fcf)
+
+
+Earlier we created a security group for our private app layer instances, so go ahead and select that along with our default VPC and the ‘private-app-subnet-az-1' under Network settings.
+
+![image](https://github.com/asdweb22/Aws-three-tier-architecture/assets/62742174/778def9c-5461-486c-97af-9e3384f25560)
+
+The ‘appLayer’ instance is created. Now, let’s navigate back to the Instance dashboard of the EC2, select the ‘appLayer’ instance, click on Actions, and then Modify IAM role under Security to update the IAM role.
+
+![image](https://github.com/asdweb22/Aws-three-tier-architecture/assets/62742174/c606136f-dcb8-4c31-a9db-72e6ac980403)
+
+
+Select the IAM role we created earlier from the ‘IAM role’ list and click ‘Update IAM role’ to update the role.
+![image](https://github.com/asdweb22/Aws-three-tier-architecture/assets/62742174/3f1c8626-9a0e-4cc9-afa4-3446d637da34)
+![image](https://github.com/asdweb22/Aws-three-tier-architecture/assets/62742174/7d009428-c75f-46a4-9aaa-587569b7aac7)
+
+
+Connect to Instance
+Let’s navigate to our list of running EC2 Instances by clicking on Instances on the left-hand side of the EC2 dashboard. When the instance state is running, connect to the instance by clicking the checkmark box to the left of the instance and clicking the connect button on the top right corner of the dashboard. Select the Session Manager tab, and click Connect. This will open a new browser tab for you.
+
+**NOTE**: If you get a message saying that you cannot connect via session manager, then check that your instances can route to your NAT gateways and verify that you gave the necessary permissions on the IAM role for the Ec2 instance.
+
+![image](https://github.com/asdweb22/Aws-three-tier-architecture/assets/62742174/2a2e081d-24be-4b53-bb46-37368a87cc0d)
+
+When you first connect to your instance like this, you will be logged in as ssm-user which is the default user as indicated below.
+
+![image](https://github.com/asdweb22/Aws-three-tier-architecture/assets/62742174/00597ca0-a4e7-4990-ab4f-829b976377b6)
+
+Let’s take this moment to make sure that we are able to reach the internet via our NAT gateways. If our network is configured correctly up till this point, we should be able to ping the Google DNS servers:
+![image](https://github.com/asdweb22/Aws-three-tier-architecture/assets/62742174/08fa4350-236c-4a0a-a206-63bd22a84763)
+
+Transmission of packets from our ping command means that we’re successfully connected to the internet. Congratulations and give yourself a pat on the back. You did! :)
+
+You can stop the ping by pressing ctrl + c.
+
+NOTE: If you can’t reach the internet then you need to double-check the route tables and subnet associations to verify if traffic is being routed to your NAT gateway!
+
+Configure Database
+Let’s start this process by downloading the MySQL CLI using the ‘sudo’ command below.
+![image](https://github.com/asdweb22/Aws-three-tier-architecture/assets/62742174/af65741a-c847-4d32-87c5-1524b136d2d2)
+
+Now, let’s initiate our DB connection with our Aurora RDS writer endpoint. In the following command, replace the RDS writer endpoint and the username, and then execute it in the browser terminal:
+
+We successfully connected to the database after replacing the database endpoint name (database-1.cluster-czkx0xyclbd4.us-east-1.rds.amazonaws.com), the username (admin), and typing in the password as indicated in the above image.
+
+NOTE: If you cannot reach your database, check your credentials and security groups then try again.
+
+![image](https://github.com/asdweb22/Aws-three-tier-architecture/assets/62742174/f8fe10b8-1fa2-4359-8149-0142fc0d77e7)
+
+- CREATE DATABASE webappdb;
+
+Let’s verify that the database was created correctly with the following command:
+Now that we’ve successfully connected to MySQL database, let’s create a database called ‘webappdb’ with the following command using the MySQL CLI:
+- SHOW DATABASES;
+  ![image](https://github.com/asdweb22/Aws-three-tier-architecture/assets/62742174/c78bbd3b-a307-4a76-84d2-0919642998c3)
+
+Now, let’s create a data table by first navigating to the database we just created with the command below:
+![image](https://github.com/asdweb22/Aws-three-tier-architecture/assets/62742174/1c99c1a2-0c49-439e-8510-53bbe40586f3)
+
+Let’s verify if the tables were created with the below command:
+- show tables;
+![image](https://github.com/asdweb22/Aws-three-tier-architecture/assets/62742174/272bd1af-0b48-4e06-bac8-23a549ae0397)
+
+The tables were successfully created as illustrated in the above image.
+
+Now that we have the tables created, let’s insert data into the table with the command below for use/testing later:
+- INSERT INTO transactions (amount,description) VALUES ('400','groceries');
+
+Let’s verify that our data was added by executing the following command:
+- SELECT * FROM transactions;
+ ![image](https://github.com/asdweb22/Aws-three-tier-architecture/assets/62742174/bdb58f66-fefe-4530-9725-e11bbddc8ed9)
