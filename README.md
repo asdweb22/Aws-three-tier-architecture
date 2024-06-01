@@ -1,4 +1,5 @@
-![image](https://github.com/asdweb22/Aws-three-tier-architecture/assets/62742174/9eace8df-bc3e-4317-a841-56fa699a2729)# Aws-three-tier-architecture
+AWS Three-Tier Architecture Design and Deployment Project
+
 **Step 1:**  download github project in your local machine using below link
  - git clone https://github.com/aws-samples/aws-three-tier-web-architecture-workshop.git
 
