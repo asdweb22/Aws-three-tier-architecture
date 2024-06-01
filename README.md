@@ -307,3 +307,109 @@ To check out our health check endpoint, copy this command into your SSM terminal
 ![image](https://github.com/asdweb22/Aws-three-tier-architecture/assets/62742174/1532122a-a3a0-4804-b1c7-6c3671b51db4)
 
 -The two above responses indicate that our networking, security, database, and app configurations are correct. Our app layer is fully configured and ready to go.
+
+**Part 4: Internal Load Balancing and Auto Scaling**
+In this section of the workshop, we will create an Amazon Machine Image (AMI) of the app tier instance we just created, and use that to set up autoscaling with a load balancer in order to make this tier highly available.
+
+**Objectives:**
+Create an AMI of our App Tier
+Create a Launch Template
+Configure Autoscaling
+Deploy Internal Load Balancer
+
+
+**App Tier AMI**
+Let’s navigate to Instances on the left-hand side of the EC2 dashboard. Select the app tier instance we created and under Actions select Image and Templates. Click Create Image.
+![image](https://github.com/asdweb22/Aws-three-tier-architecture/assets/62742174/30b91663-939d-49ce-bbf7-5f37388f00c8)
+
+Let’s give the image a name and description and then click Create image. This will take a few minutes, but if you want to monitor the status of image creation you can see it by clicking AMIs under Images on the left-hand navigation panel of the EC2 dashboard.
+
+![image](https://github.com/asdweb22/Aws-three-tier-architecture/assets/62742174/791eba43-70fe-4671-b42a-d856e8366cfd)
+
+
+Target Group
+While the AMI is being created, let’s go ahead and create our target group to use with the load balancer. On the EC2 dashboard, navigate to Target Groups under Load Balancing on the left-hand side. Click on Create Target Group.
+
+
+The purpose of forming this target group is to use our load balancer so it may balance traffic across our private app tier instances. Let’s select Instances as the target type and give it a name.
+
+![image](https://github.com/asdweb22/Aws-three-tier-architecture/assets/62742174/771576c3-54a0-4496-bce9-56f08fc11e4d)
+
+Let’s set the protocol to HTTP and the port to 4000. Remember that this is the port our Node.js app is running on. Select the VPC we’ve been using thus far, and then change the health check path to be /health to indicate the health check endpoint of our app and click Next.
+
+![image](https://github.com/asdweb22/Aws-three-tier-architecture/assets/62742174/86ba6022-8ce9-4452-a112-f483da73cebd)
+![image](https://github.com/asdweb22/Aws-three-tier-architecture/assets/62742174/7a0b00e3-cd63-4c54-9b71-400ccaf5b437)
+![image](https://github.com/asdweb22/Aws-three-tier-architecture/assets/62742174/e8a53b56-6e64-4fa6-b690-e1b829e84ec0)
+![image](https://github.com/asdweb22/Aws-three-tier-architecture/assets/62742174/24b0ff1f-2647-45d2-9676-12d23fa58d3c)
+
+**Internal Load Balancer**
+We’re going to create an internal load balancer for our three-tier. On the left-hand side of the EC2 dashboard select Load Balancers under Load Balancing and click Create Load Balancer.
+
+
+We’ll be using an Application Load Balancer for our HTTP traffic, give it a name (App-Tier-Internal-lg), select Internal under Scheme, and click the create button for that option.
+![image](https://github.com/asdweb22/Aws-three-tier-architecture/assets/62742174/845ac1f6-9b12-40c2-b80f-b75fe034d21f)
+
+Let’s select the correct network configuration for our VPC and private subnets.
+
+![image](https://github.com/asdweb22/Aws-three-tier-architecture/assets/62742174/0d7d0654-7790-405d-8721-c341ce5d7c48)
+![image](https://github.com/asdweb22/Aws-three-tier-architecture/assets/62742174/dd946754-44bb-49dd-bb91-136415ba8d8a)
+
+**Note:** Internal Load Balancer is created with two availability zones.
+
+![image](https://github.com/asdweb22/Aws-three-tier-architecture/assets/62742174/25ed2d98-f8ac-4f25-b2e6-78a4f51649d8)
+
+
+**Launch Template**
+Now, we need to create a Launch template with the AMI we created earlier before we configure Auto Scaling. On the left side of the EC2 dashboard, let’s navigate to Launch Template under Instances and click Create Launch Template.
+
+
+-Name the Launch Template, and then under Application and OS Images include the app tier AMI we previously created.
+
+![image](https://github.com/asdweb22/Aws-three-tier-architecture/assets/62742174/08a52c00-d192-41bf-a43a-bb75abdc3dc9)
+![image](https://github.com/asdweb22/Aws-three-tier-architecture/assets/62742174/07e9805b-6796-4cf5-8aeb-044157efa1bd)
+
+
+Under Instance Type select t2.micro. For Key pair and Network Settings don’t include it in the template. We don’t need a key pair to access our instances and we’ll be setting the network information in the autoscaling group.
+
+-![image](https://github.com/asdweb22/Aws-three-tier-architecture/assets/62742174/972a254c-ca85-4b02-bc4f-6278cc6fb607)
+
+Set the correct security group for our app tier, and then under Advanced details use the same IAM instance profile we have been using for our EC2 instances.
+
+![image](https://github.com/asdweb22/Aws-three-tier-architecture/assets/62742174/0af23ba7-cb30-4414-8b22-ca22c6508f16)
+![image](https://github.com/asdweb22/Aws-three-tier-architecture/assets/62742174/9f44e74b-480d-4705-81cf-228dc985049c)
+
+created launch template: 
+![image](https://github.com/asdweb22/Aws-three-tier-architecture/assets/62742174/e0bf6bc5-3ccf-4056-be56-938219fc0984)
+
+
+
+**Auto Scaling**
+We will now create the Auto Scaling Group for our app instances. On the left-hand side of the EC2 dashboard, navigate to Auto Scaling Groups under Auto Scaling and click Create Auto Scaling Group.
+
+Let’s give our Auto Scaling group a name, and then select the Launch Template we just created and click Next.
+![image](https://github.com/asdweb22/Aws-three-tier-architecture/assets/62742174/220643a4-a69e-44e9-b134-e13c0e72a25a)
+![image](https://github.com/asdweb22/Aws-three-tier-architecture/assets/62742174/21aedaef-9cbd-4439-a703-e9f24e4df72d)
+![image](https://github.com/asdweb22/Aws-three-tier-architecture/assets/62742174/dbf920ce-6826-4671-81de-e86d533d0021)
+
+For this next step, we’ll attach this Auto Scaling Group to the Load Balancer we just created by selecting the existing load balancer’s target group from the dropdown. Then, click next.
+
+![image](https://github.com/asdweb22/Aws-three-tier-architecture/assets/62742174/075d2b51-9f8f-47f2-b53d-bc75f785fc59)
+![image](https://github.com/asdweb22/Aws-three-tier-architecture/assets/62742174/92338bdf-70eb-4b68-a226-77a2d64899ae)
+
+We’re going to set the desired, minimum, and maximum capacity of our Auto Scaling Group size and Scaling policies. Review and then Create Auto Scaling Group.
+![image](https://github.com/asdweb22/Aws-three-tier-architecture/assets/62742174/391145e6-14ec-4278-9766-1dbf2af99a18)
+
+Let’s find out if our internal load balancer and autoscaling group are configured correctly. The autoscaling group will spin up 2 new app tier instances. We can test if this is working correctly by deleting one of our new instances manually and waiting to see if a new instance is booted up to replace it.
+
+![image](https://github.com/asdweb22/Aws-three-tier-architecture/assets/62742174/dd3d26b6-c77f-43f9-9e6b-f5d26e15b00a)
+
+**2 new instances are created in ec2 instance dashboard section**
+![image](https://github.com/asdweb22/Aws-three-tier-architecture/assets/62742174/01df9720-c655-42aa-85f1-6345a37b2def)
+
+Our internal load balancer and autoscaling group are working correctly
+
+NOTE: The original app tier instance is excluded from the ASG so you will see 3 instances in the EC2 dashboard. You can delete your original instance that you used to generate the app tier AMI, but it’s recommended to keep it around for troubleshooting purposes so do not delete it.
+
+Click next thrice, review the Auto Scaling Group details then create.
+
+
