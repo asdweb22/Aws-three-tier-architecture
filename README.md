@@ -214,3 +214,96 @@ Now that we have the tables created, let’s insert data into the table with the
 Let’s verify that our data was added by executing the following command:
 - SELECT * FROM transactions;
  ![image](https://github.com/asdweb22/Aws-three-tier-architecture/assets/62742174/bdb58f66-fefe-4530-9725-e11bbddc8ed9)
+
+
+**Go to your created s3 bucket: (asd-3-tier-bucket) **
+- upload given three-app-tier github project files and folders
+![image](https://github.com/asdweb22/Aws-three-tier-architecture/assets/62742174/6d5cc859-f401-469e-a845-77e19e429544)
+
+
+
+**Configure App Instance**
+The first thing we will do is update our database credentials for the app tier. To do this, let’s open the application-code/app-tier/DbConfig.js file from the GitHub repo in a text editor on the local computer.
+
+-to get s3 bucket uploaded folders and file we need to install  aws-cli in private instance
+-sudo yum install aws-cli
+- then get s3 bucket data in private instance using below command
+   -aws s3 ls
+![image](https://github.com/asdweb22/Aws-three-tier-architecture/assets/62742174/8dfe154f-1896-4eb7-b0c6-cd0405a0a895)
+
+-now do configuration add 
+  -RDS-endpoint
+  -Username
+  -Password
+  -Database name
+  
+  in DbConfig.js file which is inside three-tier-project/app-tier/DbConfig.js 
+  -and upload only DbConfig.js file in s3 bucket inside app-tier folder so you will get latest changes
+  ![image](https://github.com/asdweb22/Aws-three-tier-architecture/assets/62742174/ce347742-aa7a-43f9-8dd8-fc59b5a76e73)
+
+-With the ‘app-tier’ folder and contents uploaded to the S3 bucket, let’s go back to our SSM session via our EC2 ‘appLayer’ instance to install all of the necessary components to run our backend application. Start by installing NVM (node version manager) using the command below:
+
+-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.38.0/install.sh | bash
+-source ~/.bashrc
+
+![image](https://github.com/asdweb22/Aws-three-tier-architecture/assets/62742174/f62aa623-da6b-427f-9afa-3e1d5f1958b0)
+
+-Next, let’s install a compatible version of Node.js and make sure it’s being used with the below commands:
+- nvm install 16
+- nvm use 16
+
+![image](https://github.com/asdweb22/Aws-three-tier-architecture/assets/62742174/0c3221f9-1603-48b3-81cb-30b4c785d7c0)
+
+-PM2 is a daemon process manager that will keep our node.js app running when we exit the instance or if it is rebooted. Let’s install that as well.
+  - npm install -g pm2
+
+-Now, we need to download our code from our S3 buckets onto our instance. With the command below, let’s replace BUCKET_NAME with the name of the bucket we uploaded the app-tier folder to:
+
+   - aws s3 cp s3://BUCKET_NAME/app-tier/ app-tier --recursive
+     Ex. (aws s3 cp s3://asd-3-tier-bucket/app-tier/ app-tier --recursive)
+
+     ![image](https://github.com/asdweb22/Aws-three-tier-architecture/assets/62742174/4d0d77d1-86c2-47ab-94ed-75c3890dff5b)
+
+-Next, navigate to the app directory, install dependencies, and start the app with pm2 with the command below:
+  - cd ~/app-tier
+  - npm install
+  - pm2 start index.js
+
+![image](https://github.com/asdweb22/Aws-three-tier-architecture/assets/62742174/94b7f552-204c-43de-a3fc-db5666785b63)
+![image](https://github.com/asdweb22/Aws-three-tier-architecture/assets/62742174/86f6a910-767a-470f-be62-abc50e8aa774)
+
+-To make sure the app is running correctly run the following:
+    -pm2 list
+
+-The app is running. If you see an error, then you need to do some troubleshooting. To look at the latest errors, use this command:
+   -pm2 logs
+   ![image](https://github.com/asdweb22/Aws-three-tier-architecture/assets/62742174/1cdf1fa0-8e36-4c30-98ae-31b978e0cd89)
+ 
+   You can check to see if there’re errors in the app logs by executing the ‘pm2 log's command.
+
+  You can also see that the AB3 backend app is listening at http://localhost:4000.
+
+NOTE: If you’re having issues, check your configuration file for any typos, and double-check that you have followed all installation commands recommended till now.
+
+-PM2 will make sure our app stays running when we leave the SSM session. However, if the server is interrupted for some reason, we still want the app to start and keep running. This is also important for the AMI we will create so let’s keep PM2 running by executing the command below:
+
+  - pm2 startup
+
+-The below message appears on the command prompt above after running the ‘pm2 startup’ command.
+ [PM2] To setup the Startup Script, copy/paste the following command: 
+ 
+   ![image](https://github.com/asdweb22/Aws-three-tier-architecture/assets/62742174/125cbb0c-5876-4445-ab62-39ca4f57008b)
+
+   -pm -save
+   ![image](https://github.com/asdweb22/Aws-three-tier-architecture/assets/62742174/63f51634-9756-4b2a-98e6-70c4f3caf7aa)
+
+-Test App Tier
+Now let’s run a couple tests to see if our app is configured correctly and can retrieve data from the database.
+
+To check out our health check endpoint, copy this command into your SSM terminal. This is our simple health check endpoint that tells us if the app is simply running.
+
+- sudo curl http://localhost:4000/health
+- curl http://localhost:4000/transaction
+![image](https://github.com/asdweb22/Aws-three-tier-architecture/assets/62742174/1532122a-a3a0-4804-b1c7-6c3671b51db4)
+
+-The two above responses indicate that our networking, security, database, and app configurations are correct. Our app layer is fully configured and ready to go.
