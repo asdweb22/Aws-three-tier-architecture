@@ -413,3 +413,108 @@ NOTE: The original app tier instance is excluded from the ASG so you will see 3 
 Click next thrice, review the Auto Scaling Group details then create.
 
 
+**Part 5: Web Tier Instance Deployment**
+In this section, we will deploy an EC2 instance for the web tier and make all necessary software configurations for the NGINX web server and React.js website.
+
+**Objectives**
+Update NGINX Configuration Files
+Create a Web Tier Instance
+Configure Software Stack
+Update Config File
+
+Before we create and configure the web instances (web tier), let’s modify the application-code/nginx.conf file from the repo we previously downloaded. First, navigate to your internal load balancer’s details page and copy the DNS entry into a notepad and save.
+
+Now, let’s upload the ‘nginx.config’ file and the application-code/web-tier folder to the s3 bucket we created for this lab. Navigate back to the Amazon S3 dashboard, click ‘Buckets’ on the left hand, and select our bucket | Upload.
+
+**-Web Instance Deployment**
+Follow the same instance creation instructions we used for the App Tier instance in Part 3: App Tier Instance Deployment, with the exception of the subnet. Provision the instance in one of our public subnets. Make sure you select the correct network components, security group, and IAM role. This time, auto-assign a public ip on the Configure Instance Details page and name the instance with a name so we can identify it more easily.
+
+Back on the EC2 dashboard, select Instances on the left-hand side under Instances, and click on Launch instances.
+
+Creating web-tier instance:
+![image](https://github.com/asdweb22/Aws-three-tier-architecture/assets/62742174/792a511b-5285-43f1-8e73-4da8db0d7ee9)
+
+![image](https://github.com/asdweb22/Aws-three-tier-architecture/assets/62742174/fbf096af-db57-4294-8d6f-a14dab16feb9)
+
+![image](https://github.com/asdweb22/Aws-three-tier-architecture/assets/62742174/c2de316e-24c4-4f80-98f0-625cd0410ccf)
+
+-Let’s head back to the EC2 dashboard now that we’ve the Web Tier instance creation in process. Select the instance and click Actions | Security | Modify IAM role. Select the (ec2-three-tier-access-role) from the IAM role dropdown list and Update IAM role to update the instance.
+
+![image](https://github.com/asdweb22/Aws-three-tier-architecture/assets/62742174/4c267cd9-d503-4081-800a-4e9967ccb0a9)
+![image](https://github.com/asdweb22/Aws-three-tier-architecture/assets/62742174/af59fca3-e4ef-4c3a-acc6-20b2eb4029c2)
+
+**note:** make sure provide 22 ssh port for web-tier instance security group
+
+connect to ec2 instance 
+Note: If you don’t see a transfer of packets then you’ll need to verify your route tables attached to the subnet that your instance is deployed in.
+
+I was able to ping the Google server IP Address 8.8.8.8 from the App Tier instance command prompt terminal successfully.
+![image](https://github.com/asdweb22/Aws-three-tier-architecture/assets/62742174/bd530d18-95cd-4211-94ab-dfb02ba9b51f)
+
+Configure Web Instance
+We now need to install all of the necessary components needed to run our front-end application. Let’s start by installing NVM and node on the instance :
+![image](https://github.com/asdweb22/Aws-three-tier-architecture/assets/62742174/2e860f3d-26db-48cc-b892-aafddb063df9)
+
+  - curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.38.0/install.sh | bash
+  - source ~/.bashrc
+  - nvm install 16
+  - nvm use 16
+
+- cd /
+- aws s3 cp s3://BUCKET_NAME/web-tier/ web-tier --recursive
+  (Replace [BUCKET_NAME] with your bucket name as indicated below.)
+![image](https://github.com/asdweb22/Aws-three-tier-architecture/assets/62742174/f9e914b8-735c-4910-a60f-c4bac6d512bb)
+
+
+-Navigate to the web-layer folder and create the build folder for the react app so we can serve our code using the below commands:
+- cd ~/web-tier
+- npm install 
+- npm run build
+
+  ![image](https://github.com/asdweb22/Aws-three-tier-architecture/assets/62742174/7db5368c-0bb7-43df-a734-2d6a04d7cea9)
+
+
+
+-NGINX can be used for different use cases like load balancing, content caching etc, but we will be using it as a web server that we will configure to serve our application on port 80, as well as help direct our API calls to the internal load balancer. Let’s run the below command to proceed
+
+- sudo amazon-linux-extras install nginx1 -y
+  ![image](https://github.com/asdweb22/Aws-three-tier-architecture/assets/62742174/4a139a16-20bb-4f5b-8a0d-dfca4ef42685)
+
+-We will now have to configure NGINX. Navigate to the Nginx configuration file with the following commands and list the files in the directory:
+- cd /etc/nginx
+- ls
+
+Let’s update the ‘nginx.conf’ file with the one we uploaded to S3 bucket. We’ll remove the file and replace the bucket name below:
+- sudo rm nginx.conf
+- sudo aws s3 cp s3://BUCKET_NAME/nginx.conf .
+
+ ![image](https://github.com/asdweb22/Aws-three-tier-architecture/assets/62742174/010ed885-786c-45fd-9cc0-890ec5fc052d)
+
+ The bucket name is replaced
+
+ -do   ->  sudo vim nginx.conf
+ ->now add proxy in nginx.conf
+ ![image](https://github.com/asdweb22/Aws-three-tier-architecture/assets/62742174/77710fa7-8ae8-4ba9-a5ca-247c92a3b2b2)
+
+-restart nginx
+   - sudo service nginx restart
+
+- Let’s make sure Nginx has permission to access our files by executing the command:
+    -chmod -R 755 /home/ec2-user
+
+-And to make ensure the service starts on boot, run this command:
+    -sudo chkconfig nginx on
+
+Now let’s copy and plug in the public IP of our web tier instance to see our website. The public IP can be found on the App Tier Instance details page on the EC2 dashboard. Voila, the website is working correctly.
+
+  -http://43.205.206.204/#/
+  ![image](https://github.com/asdweb22/Aws-three-tier-architecture/assets/62742174/da9c7f41-48a0-4d0c-b06b-7bee435743ad)
+
+  -http://43.205.206.204/#/db
+  ![image](https://github.com/asdweb22/Aws-three-tier-architecture/assets/62742174/c08afd5d-4ba0-4e6b-bdc1-654fd7f2fd41)
+
+  -Add some data and click on add button over there 
+  ![image](https://github.com/asdweb22/Aws-three-tier-architecture/assets/62742174/9963441f-8b7d-45db-9183-54a112b6cd98)
+
+
+-Now check private instance and database over there entry created or not
